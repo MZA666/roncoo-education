@@ -3,6 +3,7 @@ package com.roncoo.education.user.service.api.biz;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import com.roncoo.education.util.ronglianyun.RonglianyunUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -245,10 +246,14 @@ public class ApiUserInfoBiz extends BaseBiz {
 		sendSmsLog.setMobile(userSendCodeBO.getMobile());
 		sendSmsLog.setTemplate(sys.getSmsCode());
 		// 随机生成验证码
-		sendSmsLog.setSmsCode(RandomUtil.randomNumbers(6));
+		sendSmsLog.setSmsCode(RandomUtil.randomNumbers(4));
 		try {
-			// 发送验证码
-			boolean result = AliyunUtil.sendMsg(userSendCodeBO.getMobile(), sendSmsLog.getSmsCode(), BeanUtil.copyProperties(sys, Aliyun.class));
+			// 使用阿里云发送验证码
+			//boolean result = AliyunUtil.sendMsg(userSendCodeBO.getMobile(), sendSmsLog.getSmsCode(), BeanUtil.copyProperties(sys, Aliyun.class));
+			/**
+			 * 使用容联云短信服务,数据参数使用Aliyun实体
+			 */
+			boolean result = RonglianyunUtil.sendMsg(userSendCodeBO.getMobile(), sendSmsLog.getSmsCode(), BeanUtil.copyProperties(sys, Aliyun.class));
 			// 发送成功，验证码存入缓存：5分钟有效
 			if (result) {
 				redisTemplate.opsForValue().set(userSendCodeBO.getClientId() + userSendCodeBO.getMobile(), sendSmsLog.getSmsCode(), 5, TimeUnit.MINUTES);
